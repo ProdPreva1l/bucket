@@ -10,9 +10,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface Savable {
     /**
-     * Save the object to its respective {@link Repository}
+     * Save the object to its respective {@link Dao}
      *
-     * @return the result of {@link Repository#save(Object)}
+     * @return the result of {@link Dao#save(Object)}
      */
     CompletableFuture<Boolean> save();
 }

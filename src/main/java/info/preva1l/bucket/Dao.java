@@ -42,8 +42,8 @@ import java.util.function.Function;
  * });
  * }</pre>
  *
- * <p>You can create an instance of {@link Repository} by using the
- * {@link info.preva1l.bucket.DataRepositories#getOrCreate(Class, Class)} function.</p>
+ * <p>You can create an instance of {@link Dao} by using the
+ * {@link DaoRegistry#getOrCreate(Class, Class)} function.</p>
  *
  * @param <T> the entity type this repository manages
  * @param <ID> the type of the entity's identifier
@@ -53,7 +53,7 @@ import java.util.function.Function;
  * @implNote Implementations should ensure thread-safety for concurrent operations.
  */
 @ApiStatus.NonExtendable
-public interface Repository<T, ID> {
+public interface Dao<T, ID> {
     /**
      * Inserts the given entity into the database, performing an update if the entity already exists,
      * or inserting it as a new document otherwise. The field annotated with {@link org.bson.codecs.pojo.annotations.BsonId} is used as

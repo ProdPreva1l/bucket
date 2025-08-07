@@ -23,16 +23,16 @@ import java.util.logging.Logger;
 
 /**
  * The main class for Bucket.
- * This allows you to control the MongoDB database, including managing connectivity and creating repositories.
+ * This allows you to control the MongoDB database, including managing connectivity and creating DAOs.
  *
- * <p>This class provides a centralized way to manage MongoDB connections and repository instances.
+ * <p>This class provides a centralized way to manage MongoDB connections and DAO instances.
  * It uses a singleton pattern to ensure only one database connection exists at a time and
- * caches repository instances for reuse across the application.</p>
+ * caches DAO instances for reuse across the application.</p>
  *
  * <p>Example usage:</p>
  * <pre>{@code
  * // Connect to MongoDB
- * DataRepositories.connect(
+ * DaoRegistry.connect(
  *     "mongodb://localhost:27017",
  *     "username",
  *     "password".toCharArray(),
@@ -40,14 +40,14 @@ import java.util.logging.Logger;
  *     CodecRegistries.fromCodecs()
  * );
  *
- * // Get a repository for a User entity
- * Repository<User, String> userRepo = DataRepositories.getOrCreate(User.class, String.class);
+ * // Get a dao for a User entity
+ * Dao<User, String> userDao = DaoRegistry.getOrCreate(User.class, String.class);
  *
- * // Use the repository
- * User user = userRepo.findById("123");
+ * // Use the DAO
+ * User user = userDao.findById("123");
  *
  * // Close connection when done
- * DataRepositories.close();
+ * DaoRegistry.close();
  * }</pre>
  *
  * @author Preva1l
@@ -56,14 +56,14 @@ import java.util.logging.Logger;
  * @implNote Uses virtual threads for async operations and atomic references for thread-safe state management.
  */
 @SuppressWarnings("unchecked")
-public class DataRepositories {
+public class DaoRegistry {
     private static final Logger logger = Logger.getLogger("Bucket");
     private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     private static final AtomicReference<MongoClient> connectionRef = new AtomicReference<>();
     private static final AtomicReference<MongoDatabase> databaseRef = new AtomicReference<>();
 
-    private static final ConcurrentHashMap<Class<?>, Repository<?, ?>> repositoryCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<?>, Dao<?, ?>> daoCache = new ConcurrentHashMap<>();
 
     /**
      * Private constructor to prevent instantiation of this utility class.
@@ -71,8 +71,8 @@ public class DataRepositories {
      *
      * @throws UnsupportedOperationException always, as this class should not be instantiated
      */
-    private DataRepositories() {
-        throw new UnsupportedOperationException("DataRepositories is a utility class and should not be instantiated");
+    private DaoRegistry() {
+        throw new UnsupportedOperationException("DaoRegistry is a static singleton class and should not be instantiated");
     }
 
     /**
@@ -127,29 +127,29 @@ public class DataRepositories {
     }
 
     /**
-     * Retrieves or creates a repository instance for the specified entity and ID types.
+     * Retrieves or creates a DAO instance for the specified entity and ID types.
      *
-     * <p>This method uses a cache to ensure only one repository instance exists per entity type.
-     * If a repository for the given class doesn't exist, it creates a new {@link MongoRepository}
+     * <p>This method uses a cache to ensure only one DAO instance exists per entity type.
+     * If a DAO for the given class doesn't exist, it creates a new {@link GenericMongoDao}
      * instance using the entity's {@link Entity} annotation to determine the collection name.</p>
      *
      * @param <T> the entity type
      * @param <ID> the ID type for the entity
      * @param clazz the entity class, must be annotated with {@link Entity}
      * @param idClazz the ID class (e.g., String.class, Long.class)
-     * @return a repository instance for the specified entity type
+     * @return a DAO instance for the specified entity type
      *
      * @throws IllegalStateException if MongoDB connection is not established
      * @throws NullPointerException if the entity class is not annotated with {@link Entity}
      *
      * @apiNote The entity class must have an {@link Entity} annotation specifying the collection name.
-     * @implNote Repository instances are cached and reused across multiple calls for the same entity type.
+     * @implNote DAO instances are cached and reused across multiple calls for the same entity type.
      */
-    public static <T, ID> Repository<T, ID> getOrCreate(Class<T> clazz, Class<ID> idClazz) {
-        return (Repository<T, ID>) repositoryCache.computeIfAbsent(clazz, key -> {
+    public static <T, ID> Dao<T, ID> getOrCreate(Class<T> clazz, Class<ID> idClazz) {
+        return (Dao<T, ID>) daoCache.computeIfAbsent(clazz, key -> {
             String collectionName = clazz.getAnnotation(Entity.class).value();
             MongoCollection<T> collection = database().getCollection(collectionName, clazz);
-            return new MongoRepository<T, ID>(collection, executor);
+            return new GenericMongoDao<T, ID>(collection, executor);
         });
     }
 
@@ -160,7 +160,7 @@ public class DataRepositories {
      * @throws IllegalStateException if MongoDB connection is not established
      *
      * @apiNote This method provides direct access to the database for advanced operations.
-     * Most users should use repositories instead of direct database access.
+     * Most users should use DAOs instead of direct database access.
      */
     public static MongoDatabase database() {
         MongoDatabase db = databaseRef.get();
@@ -172,11 +172,11 @@ public class DataRepositories {
      * Closes the MongoDB connection and cleans up resources.
      *
      * <p>This method should be called during application shutdown to ensure proper
-     * resource cleanup. It closes the MongoDB client connection, clears the repository
+     * resource cleanup. It closes the MongoDB client connection, clears the DAO
      * cache, and resets all internal state.</p>
      *
      * @apiNote This method is idempotent - it can be safely called multiple times.
-     * @implNote After calling this method, {@link #connect} must be called again before using repositories.
+     * @implNote After calling this method, {@link #connect} must be called again before using DAOs.
      */
     public static void close() {
         databaseRef.set(null);
@@ -185,6 +185,6 @@ public class DataRepositories {
             logger.info("MongoDB connection closed");
             client.close();
         }
-        repositoryCache.clear();
+        daoCache.clear();
     }
 }

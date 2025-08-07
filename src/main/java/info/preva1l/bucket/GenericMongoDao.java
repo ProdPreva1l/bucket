@@ -11,7 +11,6 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -20,7 +19,7 @@ import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 /**
- * Represents a singular {@link Repository}, providing utility methods for CRUD operations.
+ * Represents a singular {@link Dao}, providing utility methods for CRUD operations.
  *
  * @author Preva1l
  * @since 9/07/2025
@@ -28,11 +27,11 @@ import java.util.stream.StreamSupport;
  * @param <ID> the type of ID the entity is stored with.
  */
 @ApiStatus.Internal
-class MongoRepository<T, ID> implements Repository<T, ID> {
+class GenericMongoDao<T, ID> implements Dao<T, ID> {
     private final MongoCollection<T> collection;
     private final Executor executor;
 
-    MongoRepository(MongoCollection<T> collection, Executor executor) {
+    GenericMongoDao(MongoCollection<T> collection, Executor executor) {
         this.collection = collection;
         this.executor = executor;
     }
