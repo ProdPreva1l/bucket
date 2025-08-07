@@ -1,4 +1,4 @@
-package info.preva1l.bucket.exception;
+package info.preva1l.bucket;
 
 /**
  * Thrown when a database-related error is detected.
@@ -8,8 +8,13 @@ package info.preva1l.bucket.exception;
  * @author Preva1l
  * @since 9/07/2025
  */
-public class DatabaseException extends RuntimeException {
-    public DatabaseException(String message) {
+class DatabaseException extends RuntimeException {
+    /**
+     * Create a new DatabaseException.
+     *
+     * @param message the reason for the error.
+     */
+    DatabaseException(String message) {
         super(message);
     }
 }

@@ -1,5 +1,7 @@
 package info.preva1l.bucket;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * An object that can be saved into a repository. (Not mandatory)
  *
@@ -7,5 +9,10 @@ package info.preva1l.bucket;
  * @since 23/07/2025
  */
 public interface Savable {
-    boolean save();
+    /**
+     * Save the object to its respective {@link Repository}
+     *
+     * @return the result of {@link Repository#save(Object)}
+     */
+    CompletableFuture<Boolean> save();
 }

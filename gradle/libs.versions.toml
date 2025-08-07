@@ -1,0 +1,7 @@
+[versions]
+mongodb = "5.5.1"
+jetbrains-annotations = "24.0.1"
+
+[libraries]
+mongodb = { module = "org.mongodb:mongodb-driver-sync", version.ref = "mongodb" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }

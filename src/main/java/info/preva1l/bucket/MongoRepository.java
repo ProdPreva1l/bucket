@@ -1,4 +1,4 @@
-package info.preva1l.bucket.repository;
+package info.preva1l.bucket;
 
 import com.mongodb.Function;
 import com.mongodb.client.FindIterable;
@@ -7,8 +7,8 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import info.preva1l.bucket.exception.DatabaseException;
 import org.bson.codecs.pojo.annotations.BsonId;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,23 +20,26 @@ import java.util.concurrent.Executor;
 import java.util.stream.StreamSupport;
 
 /**
- * Represents a singular [Repository], providing utility methods for CRUD operations.
+ * Represents a singular {@link Repository}, providing utility methods for CRUD operations.
  *
  * @author Preva1l
  * @since 9/07/2025
+ * @param <T> the type of entity to get stored.
+ * @param <ID> the type of ID the entity is stored with.
  */
-public class MongoRepository<T, ID> implements Repository<T, ID> {
+@ApiStatus.Internal
+class MongoRepository<T, ID> implements Repository<T, ID> {
     private final MongoCollection<T> collection;
     private final Executor executor;
 
-    public MongoRepository(MongoCollection<T> collection, Executor executor) {
+    MongoRepository(MongoCollection<T> collection, Executor executor) {
         this.collection = collection;
         this.executor = executor;
     }
 
     public CompletableFuture<Boolean> save(@NotNull T entity) {
         return CompletableFuture.supplyAsync(() -> {
-            ID id = getFieldValueByAnnotation(BsonId.class, entity);
+            ID id = getId(entity);
             if (id == null)
                 throw new DatabaseException("no field annotated with @Identifier found on " + entity.getClass().getName());
 
@@ -70,7 +73,7 @@ public class MongoRepository<T, ID> implements Repository<T, ID> {
     }
 
     public CompletableFuture<Boolean> delete(@NotNull T entity) {
-        ID id = getFieldValueByAnnotation(BsonId.class, entity);
+        ID id = getId(entity);
         if (id == null)
             throw new DatabaseException("no field annotated with @Identifier found on " + entity.getClass().getName());
         return deleteById(id);
@@ -92,12 +95,12 @@ public class MongoRepository<T, ID> implements Repository<T, ID> {
         return CompletableFuture.supplyAsync(() -> StreamSupport.stream(operation.apply(collection).spliterator(), false).toList());
     }
 
-    public static <A extends Annotation, T, I> I getFieldValueByAnnotation(Class<A> annotationClass, T instance) {
+    private <A extends Annotation, T, I> I getId(T instance) {
         if (instance == null) return null;
 
         Field targetField = null;
         for (Field field : instance.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(annotationClass)) {
+            if (field.isAnnotationPresent(BsonId.class)) {
                 targetField = field;
                 break;
             }

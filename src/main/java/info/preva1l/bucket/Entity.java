@@ -1,4 +1,4 @@
-package info.preva1l.bucket.annotations;
+package info.preva1l.bucket;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
