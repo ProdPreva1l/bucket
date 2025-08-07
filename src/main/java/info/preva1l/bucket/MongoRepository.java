@@ -1,6 +1,5 @@
 package info.preva1l.bucket;
 
-import com.mongodb.Function;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -17,6 +16,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 /**
@@ -95,7 +95,7 @@ class MongoRepository<T, ID> implements Repository<T, ID> {
         return CompletableFuture.supplyAsync(() -> StreamSupport.stream(operation.apply(collection).spliterator(), false).toList());
     }
 
-    private <A extends Annotation, T, I> I getId(T instance) {
+    private <I> I getId(T instance) {
         if (instance == null) return null;
 
         Field targetField = null;
@@ -111,6 +111,7 @@ class MongoRepository<T, ID> implements Repository<T, ID> {
         boolean wasAccessible = targetField.canAccess(instance);
         try {
             targetField.setAccessible(true);
+            // noinspection unchecked
             return (I) targetField.get(instance);
         } catch (Exception e) {
             return null;

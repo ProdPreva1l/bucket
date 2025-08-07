@@ -1,6 +1,5 @@
 package info.preva1l.bucket;
 
-import com.mongodb.Function;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import org.jetbrains.annotations.ApiStatus;
@@ -9,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**
  * A simple interface representing a MongoDB repository.
@@ -53,7 +53,7 @@ import java.util.concurrent.CompletableFuture;
  * @implNote Implementations should ensure thread-safety for concurrent operations.
  */
 @ApiStatus.NonExtendable
-interface Repository<T, ID> {
+public interface Repository<T, ID> {
     /**
      * Inserts the given entity into the database, performing an update if the entity already exists,
      * or inserting it as a new document otherwise. The field annotated with {@link org.bson.codecs.pojo.annotations.BsonId} is used as
